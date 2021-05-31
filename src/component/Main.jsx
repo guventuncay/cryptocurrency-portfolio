@@ -3,6 +3,7 @@ import axios from "axios";
 import "bootstrap/dist/css/bootstrap.css";
 import NumberFormat from "react-number-format";
 import "bootstrap-icons/font/bootstrap-icons.css";
+
 export default class Main extends React.Component {
   state = {
     coins: [],
@@ -20,10 +21,19 @@ export default class Main extends React.Component {
   //I'll update that later on
   // setTimeout(this.getMarket.bind(this), 5000);
   calculateTotalHoldings = (key, val) => {
+    // ???????????????????????????????**
+    // if (!key) key = 1;
+
     let newTotalHoldings = this.state.totalHoldings;
     newTotalHoldings +=
       this.state.coins.find((coin) => coin.name === key).current_price * val;
     this.setState({ totalHoldings: newTotalHoldings });
+  };
+
+  //<><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+  calculateProfits = () => {
+    console.log(this.state.assets);
+    console.log(this.state.coins);
   };
 
   getMarket() {
@@ -122,6 +132,7 @@ export default class Main extends React.Component {
               this.setState({ selected: event.target.value })
             }
           >
+            <option>Select Crypto</option>
             {this.state.coins
               .filter((coin) => coin.market_cap_rank <= 10)
               .map((coin) => (
@@ -129,7 +140,7 @@ export default class Main extends React.Component {
                   {coin.name}
                 </option>
               ))}
-          </select>
+          </select>{" "}
           Value:
           <input
             placeholder="Enter value"
@@ -137,27 +148,52 @@ export default class Main extends React.Component {
             onChange={(event) =>
               this.setState({ newAsset: event.target.value })
             }
-          />
+          />{" "}
           <button
             className="btn btn-primary"
             onClick={() => {
               let key = this.state.selected;
               let val = this.state.newAsset;
               let newAssets = this.state.assets;
-              newAssets.push({ key, val });
+              let keys = [];
+              this.state.assets.map((asset) => keys.push(asset.key));
+
+              if (!keys.includes(key)) {
+                newAssets.push({ key, val });
+              } else {
+                let oldVal = newAssets.pop({ key, val });
+                oldVal.val = +oldVal.val + +val;
+                newAssets.push(oldVal);
+              }
               this.setState({ assets: newAssets });
-              console.log(this.state.assets);
               this.calculateTotalHoldings(key, val);
+              this.calculateProfits();
             }}
           >
             Submit
           </button>
         </div>
-        <div>Total holdings in USD: {this.state.totalHoldings}$</div>
         <div>
-          {this.state.assets.map((x) => (
+          Total holdings in USD:
+          <NumberFormat
+            value={this.state.totalHoldings}
+            displayType={"text"}
+            thousandSeparator={true}
+            prefix={"$"}
+            decimalScale={2}
+          />
+        </div>
+        <div>
+          Holdings:
+          {/* sort? */}
+          {this.state.assets.map((asset) => (
             <div>
-              {x.key},{x.val}
+              <NumberFormat
+                value={asset.val}
+                displayType={"text"}
+                thousandSeparator={true}
+              />{" "}
+              {asset.key},
             </div>
           ))}
         </div>
